@@ -12,6 +12,13 @@
 - **Poetry with in-project `.venv`** (`poetry.toml`) — editors find the interpreter; reuses the repo-local venv convention.
 - **Known limitation** — elevated (admin) windows do not receive/trigger input from a non-elevated process.
 
+- **PyInstaller one-folder, not one-file** — no per-launch unpacking of a large tree, faster start, fewer antivirus false positives. Cost: a folder instead of a single exe (the installer hides this).
+- **Inno Setup, per-user** — no admin rights, built-in upgrade and uninstall, detects a running instance through the app's mutex.
+- **`base.en` bundled in the installer** — works offline from the first launch and removes the silent first-run download failure. Cost: a larger installer (about 216 MB). Other models still download on demand. PyInstaller 6 puts it in `_internal/models/base.en`, which `paths.data_dir()` resolves.
+- **The app owns the HKCU Run value** — the in-app checkbox is the only switch; the installer has no startup task. `apply_startup` rewrites the value on every start, so a moved or upgraded install self-heals. The uninstaller removes the value only if it points into the install folder.
+- **Unsigned installer** — the audience is the author and a few trusted people. Expect a SmartScreen "Unknown publisher" prompt and possible antivirus flags (the app installs a global keyboard hook). Signing can be added later as a build step.
+- **Frozen self-test in the build** — `LocalDictation.exe --self-test <file>` fails the build if a dependency, data file or the bundled model is missing, instead of failing at the first dictation on someone else's machine.
+
 ## Unverified assumptions (need a human at the keyboard)
 - Start-menu suppression via the unassigned virtual key 0xE8 (injected with `keybd_event` when a Win shortcut activates) is unverified on a real desktop. Fallbacks to try: 0xFF or tapping Left Shift (0xA0). Items 2-5 of `docs/manual-test-checklist.md` verify it.
 - The hook is never re-installed if Windows silently times it out; Tray > Restart hotkey is the recovery.

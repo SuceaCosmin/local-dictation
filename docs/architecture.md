@@ -16,6 +16,8 @@ One long-running tray app (PySide6, single Qt event loop). See the design spec i
 | `config.py` | `Config` (validated), `ConfigStore` (JSON in `%APPDATA%`) |
 | `controller.py` | `Controller` state machine: idle → recording → transcribing → (ready) → pasting → idle |
 | `startup.py` | Start with Windows (HKCU Run key) |
+| `paths.py` | Pure: `is_frozen()`, `app_dir()`, `data_dir()`, `bundled_model_path(name)` (model shipped in the installer) |
+| `selftest.py` | `--self-test <outfile>`: imports every heavy dependency, loads the model, runs VAD transcription; used by the build to verify a frozen exe |
 | `ui/tray.py` | `TrayIcon`: state-coloured icon + menu (Settings, Restart hotkey, Quit) |
 | `ui/settings.py` | `SettingsDialog` and `ShortcutEdit` (shortcut capture via the hook; cancels capture when the dialog closes) |
 | `app.py` | Wiring, logging, single-instance mutex, `Bridge` (controller callbacks to Qt signals), `main()` |
@@ -26,3 +28,6 @@ hook thread → `ShortcutMatcher` → `EventDispatcher` queue → dispatcher thr
 
 ## Threads
 Qt main thread (UI) · hook thread (message loop, must stay fast) · dispatcher thread (runs controller handlers, may block briefly) · worker threads (transcription/paste) · model-loader thread.
+
+## Packaging (`packaging/`)
+`build.ps1` → reads the version from `pyproject.toml` → fetches `base.en` into `packaging/model-cache/` → PyInstaller (`local-dictation.spec`, one-folder, windowed) → runs the frozen exe with `--self-test` → Inno Setup (`installer.iss`) → `dist/LocalDictation-<version>-Setup.exe`. The model sits in PyInstaller's data folder (`_internal/models/base.en/`, i.e. `sys._MEIPASS`); `transcribe._model_source` prefers it when frozen. Per-user install under `%LOCALAPPDATA%\Programs\Local Dictation`; the installer's `AppMutex` is the app's single-instance mutex.

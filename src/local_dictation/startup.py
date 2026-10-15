@@ -5,12 +5,16 @@ import sys
 import winreg
 from pathlib import Path
 
+from . import paths
+
 RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
 VALUE_NAME = "LocalDictation"
 
 
 def launch_command() -> str:
     exe = Path(sys.executable)
+    if paths.is_frozen():
+        return f'"{exe}"'
     pythonw = exe.with_name("pythonw.exe")
     return f'"{pythonw if pythonw.exists() else exe}" -m local_dictation'
 
