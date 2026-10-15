@@ -70,3 +70,122 @@ class Shortcut:
         if len(others) < len(self.keys):  # contains a modifier
             return True
         return len(others) == 1 and others[0][0] == "f" and others[0][1:].isdigit()
+
+
+@dataclass(frozen=True)
+class Decision:
+    swallow: bool = False
+    events: tuple = ()
+    inject_mask: bool = False
+
+
+PASS = Decision()
+
+
+class ShortcutMatcher:
+    """Decides, per key event, whether to swallow it and which shortcut events to emit.
+
+    Invariant: a key-up is swallowed only if the matching key-down was swallowed, so the OS
+    never sees an unbalanced down/up pair (no stuck modifiers).
+    """
+
+    def __init__(self, bindings: dict | None = None):
+        self._bindings = dict(bindings or {})
+        self._down: set = set()
+        self._swallowed: set = set()
+        self._active: set = set()
+        self._lock = threading.RLock()
+
+    def set_bindings(self, bindings: dict) -> None:
+        with self._lock:
+            self._bindings = dict(bindings)
+            self._active.clear()
+
+    def reset(self) -> None:
+        with self._lock:
+            self._down.clear()
+            self._swallowed.clear()
+            self._active.clear()
+
+    def on_key(self, name: str, is_down: bool) -> Decision:
+        with self._lock:
+            return self._on_down(name) if is_down else self._on_up(name)
+
+    def _on_down(self, name: str) -> Decision:
+        first = name not in self._down
+        self._down.add(name)
+        if name in self._swallowed:
+            return Decision(swallow=True)
+        if not first:
+            return PASS
+        events, mask = [], False
+        candidate = frozenset(self._down)
+        for binding, shortcut in self._bindings.items():
+            if shortcut.keys == candidate and binding not in self._active:
+                self._active.add(binding)
+                events.append((binding, "pressed"))
+                mask = mask or "win" in shortcut.keys
+        if events or self._active:
+            self._swallowed.add(name)
+            return Decision(True, tuple(events), mask)
+        return PASS
+
+    def _on_up(self, name: str) -> Decision:
+        self._down.discard(name)
+        events = []
+        for binding in list(self._active):
+            shortcut = self._bindings.get(binding)
+            if shortcut is None or name in shortcut.keys:
+                self._active.discard(binding)
+                events.append((binding, "released"))
+        swallow = name in self._swallowed
+        self._swallowed.discard(name)
+        return Decision(swallow, tuple(events))
+
+    def prune(self, is_held: Callable[[str], bool], keep: str | None = None) -> tuple:
+        """Forget passed-through keys the OS says are up (a missed key-up).
+
+        Swallowed keys are skipped: the OS never saw them go down, so it cannot confirm them.
+        """
+        with self._lock:
+            events: list = []
+            for name in list(self._down):
+                if name == keep or name in self._swallowed:
+                    continue
+                if not is_held(name):
+                    events.extend(self._on_up(name).events)
+            return tuple(events)
+
+
+@dataclass(frozen=True)
+class CaptureStep:
+    swallow: bool
+    done: Shortcut | None = None
+    cancelled: bool = False
+
+
+class ShortcutCapture:
+    """Records the largest set of keys held together; finishes when all are released."""
+
+    def __init__(self):
+        self._down: set = set()
+        self._peak: set = set()
+        self._seen: set = set()
+
+    def preview(self) -> str:
+        return Shortcut(frozenset(self._peak)).format() if self._peak else ""
+
+    def on_key(self, name: str, is_down: bool) -> CaptureStep:
+        if is_down:
+            if not self._seen and name == "esc":
+                return CaptureStep(True, cancelled=True)
+            self._seen.add(name)
+            self._down.add(name)
+            self._peak.add(name)
+            return CaptureStep(True)
+        if name not in self._seen:
+            return CaptureStep(False)
+        self._down.discard(name)
+        if not self._down and self._peak:
+            return CaptureStep(True, done=Shortcut(frozenset(self._peak)))
+        return CaptureStep(True)
