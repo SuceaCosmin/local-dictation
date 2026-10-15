@@ -24,6 +24,10 @@ UninstallDisplayName=Local Dictation
 [Files]
 Source: "..\build\pyinstaller\dist\LocalDictation\*"; DestDir: "{app}"; Flags: recursesubdirs ignoreversion
 
+[InstallDelete]
+; Drop files a newer build no longer ships (the folder is fully rewritten by [Files]).
+Type: filesandordirs; Name: "{app}\_internal"
+
 [Icons]
 Name: "{autoprograms}\Local Dictation"; Filename: "{app}\LocalDictation.exe"
 
@@ -42,9 +46,9 @@ var
 begin
   if CurUninstallStep <> usUninstall then exit;
 
-  { The app owns this value; remove it only if it points into this install. }
+  { The app owns this value; remove it only if the quoted command starts inside this install folder. }
   if RegQueryStringValue(HKCU, RunKey, RunValue, Command) then
-    if Pos(Lowercase(ExpandConstant('{app}')), Lowercase(Command)) > 0 then
+    if Pos(Lowercase('"' + ExpandConstant('{app}') + '\'), Lowercase(Command)) = 1 then
       RegDeleteValue(HKCU, RunKey, RunValue);
 
   DataDir := ExpandConstant('{userappdata}\LocalDictation');
