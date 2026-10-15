@@ -44,6 +44,17 @@ def acquire_single_instance() -> bool:
     return ctypes.get_last_error() != 183  # ERROR_ALREADY_EXISTS
 
 
+def apply_startup(enabled: bool, notify, set_enabled=startup.set_enabled) -> bool:
+    """Apply the start-with-Windows setting; a registry failure is reported, never raised."""
+    try:
+        set_enabled(enabled)
+    except OSError as e:
+        log.exception("could not update the start-with-Windows setting")
+        notify("Start with Windows failed", str(e))
+        return False
+    return True
+
+
 class Bridge(QObject):
     """Turns callbacks from worker threads into queued Qt signals."""
     state_changed = Signal(str)
@@ -83,7 +94,7 @@ def main() -> int:
         if previous is None or (new.model, new.device) != (previous.model, previous.device):
             transcriber.configure(new.model, new.device)
         listener.set_bindings(new.bindings())
-        startup.set_enabled(new.start_with_windows)
+        apply_startup(new.start_with_windows, tray.notify)
 
     def start_listener() -> None:
         try:
