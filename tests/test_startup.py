@@ -1,3 +1,4 @@
+import sys
 import winreg
 
 from local_dictation import startup
@@ -29,3 +30,15 @@ def test_command_uses_pythonw_and_module():
     cmd = startup.launch_command()
     assert cmd.lower().endswith("-m local_dictation")
     assert "pythonw" in cmd.lower()
+
+
+def test_command_when_frozen_is_the_installed_exe_quoted(monkeypatch):
+    exe = r"C:\Users\Some One\AppData\Local\Programs\Local Dictation\LocalDictation.exe"
+    monkeypatch.setattr(sys, "frozen", True, raising=False)
+    monkeypatch.setattr(sys, "executable", exe)
+    assert startup.launch_command() == f'"{exe}"'
+
+
+def test_command_from_source_is_unchanged_when_not_frozen(monkeypatch):
+    monkeypatch.delattr(sys, "frozen", raising=False)
+    assert startup.launch_command().lower().endswith("-m local_dictation")
