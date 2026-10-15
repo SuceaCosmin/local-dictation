@@ -31,4 +31,16 @@ $size = (Get-ChildItem "$out\dist\LocalDictation" -Recurse | Measure-Object Leng
 Write-Host ("Frozen folder size: {0:N0} MB" -f $size)
 
 if ($SkipInstaller) { return }
-# 4. Installer stage is added in Task 5.
+
+# 4. Installer
+$iscc = @(
+    (Get-Command ISCC.exe -ErrorAction SilentlyContinue).Source,
+    "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe",
+    "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",
+    "$env:ProgramFiles\Inno Setup 6\ISCC.exe"
+) | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
+if (-not $iscc) { throw "Inno Setup 6 not found. Install it: winget install --id JRSoftware.InnoSetup -e" }
+& $iscc "/DAppVersion=$version" "packaging\installer.iss"
+if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed" }
+$setup = Join-Path $root "dist\LocalDictation-$version-Setup.exe"
+Write-Host ("Installer: {0} ({1:N0} MB)" -f $setup, ((Get-Item $setup).Length / 1MB))
