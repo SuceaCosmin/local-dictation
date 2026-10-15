@@ -9,7 +9,10 @@ Write-Host "Building Local Dictation $version"
 
 # 2. Bundled model (cached between builds)
 $model = Join-Path $root "packaging\model-cache\base.en"
-if (-not (Test-Path (Join-Path $model "model.bin"))) {
+$required = "config.json", "model.bin", "tokenizer.json"
+$complete = -not ($required | Where-Object { -not (Test-Path (Join-Path $model $_)) })
+if (-not $complete) {
+    if (Test-Path $model) { Remove-Item $model -Recurse -Force }  # drop a partial earlier download
     Write-Host "Fetching base.en model..."
     poetry run python -c "from faster_whisper.utils import download_model; download_model('base.en', output_dir=r'$model')"
     if ($LASTEXITCODE -ne 0) { throw "model download failed" }
@@ -22,7 +25,10 @@ if ($LASTEXITCODE -ne 0) { throw "PyInstaller failed" }
 $exe = Join-Path $out "dist\LocalDictation\LocalDictation.exe"
 $result = Join-Path $out "selftest.txt"
 Remove-Item $result -ErrorAction SilentlyContinue
+# Offline: any fallback to the Hugging Face hub (e.g. a missing tokenizer) must fail the build.
+$env:HF_HUB_OFFLINE = "1"
 Start-Process $exe -ArgumentList "--self-test", "`"$result`"" -Wait
+Remove-Item Env:HF_HUB_OFFLINE
 $text = if (Test-Path $result) { Get-Content $result -Raw } else { "no result file (frozen exe crashed)" }
 if (-not $text.StartsWith("OK")) { throw "frozen self-test failed: $text" }
 if ($text -notmatch "models") { throw "frozen build is not using the bundled model: $text" }

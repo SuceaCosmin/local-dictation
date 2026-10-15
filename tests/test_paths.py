@@ -14,6 +14,7 @@ def _make_model(exe_dir, name="base.en", with_bin=True):
     model = exe_dir / "models" / name
     model.mkdir(parents=True)
     (model / "config.json").write_text("{}")
+    (model / "tokenizer.json").write_text("{}")
     if with_bin:
         (model / "model.bin").write_bytes(b"x")
     return model
@@ -65,3 +66,12 @@ def test_bundled_model_is_found_in_pyinstaller_data_dir(monkeypatch, tmp_path):
     monkeypatch.setattr(sys, "_MEIPASS", str(data_dir), raising=False)
     model = _make_model(data_dir)
     assert paths.bundled_model_path("base.en") == model
+
+
+@pytest.mark.parametrize("missing", ["config.json", "tokenizer.json"])
+def test_model_folder_missing_required_file_is_ignored(monkeypatch, tmp_path, missing):
+    # Without tokenizer.json faster-whisper silently fetches the tokenizer from the hub.
+    _frozen(monkeypatch, tmp_path)
+    model = _make_model(tmp_path)
+    (model / missing).unlink()
+    assert paths.bundled_model_path("base.en") is None
