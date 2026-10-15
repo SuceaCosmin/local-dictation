@@ -7,6 +7,7 @@ Offline, Windows-only push-to-talk dictation (a local alternative to Wispr Flow)
 - `docs/architecture.md` — module map and data flow (keep current)
 - `docs/decisions.md` — why things are the way they are
 - `docs/manual-test-checklist.md` — OS-level checks that unit tests cannot cover
+- `docs/roadmap.md` — what is next (installer) and the small deferred items
 - `docs/superpowers/specs/` and `docs/superpowers/plans/` — design specs and implementation plans
 
 ## Commands
