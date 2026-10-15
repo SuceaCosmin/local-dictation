@@ -58,7 +58,7 @@ def test_update_rejects_invalid(tmp_path):
     (Config(stop_mode="nope"), "Stop mode"),
     (Config(device="tpu"), "Device"),
     (Config(model="  "), "Model"),
-    (Config(stop_mode="combo", paste_shortcut="ctrl+win"), "differ"),
+    (Config(stop_mode="combo", paste_shortcut="ctrl+win"), "must not contain"),
     (Config(stop_mode="combo", paste_shortcut="x"), "Paste shortcut"),
 ])
 def test_validate_reports_problems(cfg, fragment):
@@ -74,3 +74,17 @@ def test_bindings():
     combo = Config(stop_mode="combo").bindings()
     assert set(combo) == {"record", "paste"}
     assert combo["record"].format() == "ctrl+win"
+
+
+def test_defaults_valid_in_combo_mode():
+    assert Config(stop_mode="combo").validate() == []
+
+
+@pytest.mark.parametrize("record, paste", [
+    ("ctrl+win", "ctrl+win+space"),
+    ("ctrl+win+space", "ctrl+win"),
+    ("ctrl+win", "ctrl+win"),
+])
+def test_combo_rejects_shortcuts_containing_one_another(record, paste):
+    cfg = Config(stop_mode="combo", record_shortcut=record, paste_shortcut=paste)
+    assert any("must not contain one another" in e for e in cfg.validate())

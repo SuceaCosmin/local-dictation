@@ -10,7 +10,7 @@ Run after any change to `hotkey.py`, `paste.py`, `audio.py` or `app.py`.
 6. Hold, press nothing else, release after < 0.3 s → nothing pasted, no error.
 7. Clipboard: copy "abc", dictate, then paste manually → "abc" is back.
 8. Settings → change shortcut with the capture widget (try Ctrl+Alt+Space and F9) → new shortcut works, old one no longer does.
-9. Settings → stop mode "separate shortcut": release ends recording, text waits (tray "ready"); paste shortcut pastes it.
+9. Settings → stop mode "separate shortcut": release ends recording, text waits (tray "ready"); paste shortcut (default Ctrl+Shift+Space; it must not contain or be contained in the record shortcut) pastes it.
 10. Unplug/disable the microphone → press shortcut → tray notification, app keeps working after re-enabling.
 11. Stop Ollama, set a cleanup model → dictation still pastes the raw text.
 12. Start with Windows on → reboot/login → app is running.

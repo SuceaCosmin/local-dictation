@@ -28,8 +28,8 @@ def _check_shortcut(text: str, label: str, errors: list[str]) -> Shortcut | None
         errors.append(f"{label} is empty.")
         return None
     if not shortcut.is_safe():
-        errors.append(f"{label} must include Ctrl, Alt, Shift or Win (or be a function key) "
-                      "and at most one other key.")
+        errors.append(f"{label} must be a function key, or combine Ctrl, Alt or Win "
+                      "(Shift alone is not enough) with at most one other key.")
         return None
     return shortcut
 
@@ -38,7 +38,7 @@ def _check_shortcut(text: str, label: str, errors: list[str]) -> Shortcut | None
 class Config:
     record_shortcut: str = "ctrl+win"
     stop_mode: str = "release"
-    paste_shortcut: str = "ctrl+win+space"
+    paste_shortcut: str = "ctrl+shift+space"
     model: str = "base.en"
     device: str = "cpu"
     language: str = ""
@@ -67,8 +67,8 @@ class Config:
             errors.append("Model must not be empty.")
         if self.stop_mode == "combo":
             paste = _check_shortcut(self.paste_shortcut, "Paste shortcut", errors)
-            if record and paste and record.keys == paste.keys:
-                errors.append("Record and paste shortcuts must differ.")
+            if record and paste and (record.keys <= paste.keys or paste.keys <= record.keys):
+                errors.append("Record and paste shortcuts must not contain one another.")
         return errors
 
     def bindings(self) -> dict[str, Shortcut]:
