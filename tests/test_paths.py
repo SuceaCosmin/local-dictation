@@ -56,3 +56,12 @@ def test_name_cannot_escape_models_folder(monkeypatch, tmp_path, name):
     _make_model(tmp_path)
     (tmp_path / "model.bin").write_bytes(b"x")  # a decoy one level up
     assert paths.bundled_model_path(name) is None
+
+
+def test_bundled_model_is_found_in_pyinstaller_data_dir(monkeypatch, tmp_path):
+    # PyInstaller 6 keeps data files in <exe dir>\_internal (sys._MEIPASS), not beside the exe.
+    _frozen(monkeypatch, tmp_path)
+    data_dir = tmp_path / "_internal"
+    monkeypatch.setattr(sys, "_MEIPASS", str(data_dir), raising=False)
+    model = _make_model(data_dir)
+    assert paths.bundled_model_path("base.en") == model

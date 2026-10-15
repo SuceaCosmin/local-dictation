@@ -13,11 +13,16 @@ def app_dir() -> Path:
     return Path(sys.executable).parent
 
 
+def data_dir() -> Path:
+    """Where PyInstaller puts bundled data (<exe dir>\_internal in v6); the exe folder otherwise."""
+    return Path(getattr(sys, "_MEIPASS", app_dir()))
+
+
 def bundled_model_path(name: str) -> Path | None:
     """Folder of the Whisper model shipped inside the installer, or None to use the normal download."""
     if not is_frozen():
         return None
     if not name or name in (".", "..") or any(sep in name for sep in ("/", "\\", ":")):
         return None
-    folder = app_dir() / "models" / name
+    folder = data_dir() / "models" / name
     return folder if (folder / "model.bin").is_file() else None
