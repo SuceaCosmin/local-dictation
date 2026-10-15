@@ -1,30 +1,15 @@
 # Roadmap
 
-Status as of v0.1.0 (first release: run from source with Poetry).
+Status as of v0.2.0 (installer shipped; v0.1.0 was run-from-source with Poetry).
 
-## Next: installer
+## Done: installer (v0.2.0)
+`packaging/build.ps1` builds `dist/LocalDictation-<version>-Setup.exe` (about 216 MB, `base.en` bundled, per-user, unsigned). Design: `docs/superpowers/specs/2026-10-15-installer-design.md`; plan: `docs/superpowers/plans/2026-10-15-windows-installer.md`. The clean-machine pass (`docs/manual-test-checklist.md` items 15-19) is still to be done by a person.
 
-**Goal:** a normal Windows user installs Local Dictation with a double-click and starts it from the Start menu or at sign-in, with no Python, Poetry or terminal.
-
-**Status:** not started. Needs its own brainstorm → spec → plan cycle (superpowers workflow) before any code.
-
-### Likely approach (to be confirmed in the spec)
-1. **Freeze the app** with PyInstaller (windowed build, no console) from the existing `local-dictation` entry point `local_dictation.app:main`.
-2. **Wrap it in an installer** (Inno Setup is the leading candidate): per-user install without admin rights, Start menu shortcut, optional "start with Windows", clean uninstall.
-3. **Publish** the installer as an asset on the GitHub release, versioned from `pyproject.toml`. Consider a GitHub Actions workflow to build it on tag push.
-
-### Things the installer work must handle (known from the code)
-- **`startup.launch_command()`** builds `"<pythonw.exe>" -m local_dictation` from `sys.executable` (`src/local_dictation/startup.py`). In a frozen build `sys.executable` is the app itself and `-m` is wrong. Make it frozen-aware (`sys.frozen`) and return the installed exe path. The installer and the in-app "Start with Windows" checkbox must not fight over the same `HKCU\...\Run` value (`LocalDictation`); pick one owner.
-- **Heavy dependencies** (faster-whisper / CTranslate2 / onnxruntime / PySide6 / PortAudio via sounddevice) need explicit PyInstaller collection of their data files and binaries. Expect a large build; measure it before choosing one-file vs one-folder (one-folder starts faster and is easier for an installer).
-- **Whisper model:** currently downloaded on first launch (the app's only non-localhost network use). Decide: keep the first-run download, or bundle a default model. The tray already shows "loading", but first-run needs clearer feedback (see "Also deferred").
-- **Antivirus / SmartScreen:** an unsigned executable that installs a global keyboard hook is likely to be flagged. Decide on code signing, and document what users should expect.
-- **Keyboard hook in a frozen app:** re-verify `docs/manual-test-checklist.md` against the installed build, including the Start-menu suppression (still an unverified assumption, see `docs/decisions.md`).
-- **Single instance, logs and config** already live in `%APPDATA%\LocalDictation` and a named mutex, so they are installer-friendly. Uninstall should offer to keep or remove that folder.
-- **Upgrades:** installing over a running instance (the mutex and the hook) needs the installer to close the app first.
-- **Elevated windows:** the known limitation (admin windows ignore input from a non-elevated process) stays; document it in the installer's readme/notes.
-
-### Done when
-A clean Windows machine with no Python can install, run the checklist items 1–9, start with Windows, and uninstall without leftovers.
+### Deferred installer work
+- **Code signing** and the SmartScreen / antivirus story, if the audience grows beyond trusted people.
+- **GitHub Actions** workflow that builds the installer on tag push and attaches it to the release.
+- **Installer and exe icon** (the tray icon is drawn at runtime; the exe has the default icon).
+- **Upgrade-over-running-instance** and **uninstall** are covered by checklist items 18-19, not by automation.
 
 ## Also deferred (small, from the v0.1.0 reviews)
 None of these blocks use; pick them up opportunistically.

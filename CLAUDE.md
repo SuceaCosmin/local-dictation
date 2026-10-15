@@ -15,6 +15,7 @@ Offline, Windows-only push-to-talk dictation (a local alternative to Wispr Flow)
 - Tests: `poetry run pytest`
 - Run (with console): `poetry run local-dictation`
 - Run (no console): `.venv\Scripts\pythonw.exe -m local_dictation`
+- Build installer: `pwsh packaging\build.ps1` (needs Inno Setup 6)
 - Logs: `%APPDATA%\LocalDictation\dictation.log`; config: `%APPDATA%\LocalDictation\config.json`
 
 ## Rules
@@ -22,3 +23,4 @@ Offline, Windows-only push-to-talk dictation (a local alternative to Wispr Flow)
 - The keyboard hook callback must never block; it only enqueues events.
 - Pure logic (shortcut matching, controller, config) stays free of OS/Qt imports so it is unit-testable.
 - Any change to architecture or behavior updates the relevant file in `docs/` in the same commit.
+- Branching: gitflow-like. `main` = tagged releases, `develop` = integration, `feature/*` branch from `develop`.

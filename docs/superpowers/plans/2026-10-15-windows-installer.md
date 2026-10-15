@@ -630,7 +630,7 @@ Test-Path "$dir\LocalDictation.exe"                      # expect True
 Test-Path "$dir\models\base.en\model.bin"                # expect True
 Start-Process "$dir\LocalDictation.exe" -ArgumentList "--self-test","C:\tmp\ld-st.txt" -Wait
 Get-Content C:\tmp\ld-st.txt                             # expect: OK source=C:\tmp\ld-install-test\models\base.en
-Start-Process "$dir\unins000.exe" -ArgumentList "/VERYSILENT" -Wait
+Start-Process "$dir\unins000.exe" -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES" -Wait   # /VERYSILENT alone still shows the "delete settings?" dialog and waits
 Test-Path $dir                                           # expect False
 Test-Path "$env:APPDATA\LocalDictation"                  # expect unchanged (silent uninstall keeps data)
 ```
