@@ -5,6 +5,7 @@ import ctypes
 import logging
 import logging.handlers
 import sys
+from pathlib import Path
 
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QApplication, QDialog
@@ -63,6 +64,9 @@ class Bridge(QObject):
 
 
 def main() -> int:
+    if len(sys.argv) == 3 and sys.argv[1] == "--self-test":
+        from .selftest import run
+        return run(Path(sys.argv[2]))
     setup_logging()
     if not acquire_single_instance():
         log.warning("Local Dictation is already running")

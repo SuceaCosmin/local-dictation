@@ -80,3 +80,30 @@ def test_reconfigure_discards_stale_load():
 def test_transcribe_before_configure_raises():
     with pytest.raises(RuntimeError):
         Transcriber(lambda n, d: FakeModel()).transcribe(np.zeros(10, dtype="float32"), "", timeout=0.01)
+
+
+from local_dictation import transcribe as transcribe_module
+
+
+def test_model_source_prefers_bundled_folder(monkeypatch, tmp_path):
+    monkeypatch.setattr(transcribe_module.paths, "bundled_model_path", lambda name: tmp_path / name)
+    assert transcribe_module._model_source("base.en") == str(tmp_path / "base.en")
+
+
+def test_model_source_falls_back_to_name(monkeypatch):
+    monkeypatch.setattr(transcribe_module.paths, "bundled_model_path", lambda name: None)
+    assert transcribe_module._model_source("small.en") == "small.en"
+
+
+def test_default_factory_loads_from_the_resolved_source(monkeypatch):
+    seen = {}
+
+    class FakeWhisper:
+        def __init__(self, source, **kwargs):
+            seen["source"], seen["kwargs"] = source, kwargs
+
+    monkeypatch.setattr("faster_whisper.WhisperModel", FakeWhisper)
+    monkeypatch.setattr(transcribe_module, "_model_source", lambda name: "C:\bundled\base.en")
+    transcribe_module._default_factory("base.en", "cpu")
+    assert seen["source"] == "C:\bundled\base.en"
+    assert seen["kwargs"]["compute_type"] == "int8"

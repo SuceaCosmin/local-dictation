@@ -6,13 +6,21 @@ import os
 import threading
 from typing import Callable
 
+from . import paths
+
 log = logging.getLogger(__name__)
+
+
+def _model_source(name: str) -> str:
+    bundled = paths.bundled_model_path(name)
+    return str(bundled) if bundled else name
 
 
 def _default_factory(name: str, device: str):
     from faster_whisper import WhisperModel
     compute = "int8" if device == "cpu" else "float32"
-    return WhisperModel(name, device=device, compute_type=compute, cpu_threads=os.cpu_count() or 4)
+    return WhisperModel(_model_source(name), device=device, compute_type=compute,
+                        cpu_threads=os.cpu_count() or 4)
 
 
 class Transcriber:
