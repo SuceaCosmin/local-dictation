@@ -4,7 +4,7 @@
 
 **Goal:** Ship `LocalDictation-<version>-Setup.exe`: a per-user installer that installs the app with the `base.en` Whisper model bundled, so it runs offline from first launch with no Python, Poetry or terminal.
 
-**Architecture:** PyInstaller freezes the app (one-folder, windowed) into `build/pyinstaller/dist/LocalDictation/`, with the model copied to `models/base.en/` beside the exe. Inno Setup wraps that folder into a per-user installer. Three small Qt-free code changes make the app frozen-aware: `startup.launch_command()`, a new `paths.py`, and a bundled-model lookup in `transcribe.py`. A `--self-test <outfile>` flag lets the build verify a frozen exe without a UI.
+**Architecture:** PyInstaller freezes the app (one-folder, windowed) into `build/pyinstaller/dist/LocalDictation/`, with the model copied to `models/base.en/` in PyInstaller's data folder (`_internal`, next to the exe). Inno Setup wraps that folder into a per-user installer. Three small Qt-free code changes make the app frozen-aware: `startup.launch_command()`, a new `paths.py`, and a bundled-model lookup in `transcribe.py`. A `--self-test <outfile>` flag lets the build verify a frozen exe without a UI.
 
 **Tech Stack:** Python 3.11, Poetry 2.x, PyInstaller, Inno Setup 6 (`ISCC.exe`), PowerShell 7, pytest.
 
@@ -445,7 +445,7 @@ for pkg in ("faster_whisper", "ctranslate2", "onnxruntime", "sounddevice", "_sou
     hiddenimports += h
 hiddenimports += ["pynput.keyboard._win32", "pynput.mouse._win32"]
 
-# The Whisper model fetched by build.ps1 ships beside the exe as models/base.en.
+# The Whisper model fetched by build.ps1 ships in PyInstaller's data folder (`_internal`, next to the exe) as models/base.en.
 datas += [(str(root / "packaging" / "model-cache" / "base.en"), "models/base.en")]
 
 a = Analysis(
@@ -627,9 +627,9 @@ $setup = (Get-ChildItem dist\LocalDictation-*-Setup.exe | Select-Object -First 1
 $dir = "C:\tmp\ld-install-test"
 Start-Process $setup -ArgumentList "/VERYSILENT","/CURRENTUSER","/DIR=`"$dir`"","/LOG=C:\tmp\ld-install.log" -Wait
 Test-Path "$dir\LocalDictation.exe"                      # expect True
-Test-Path "$dir\models\base.en\model.bin"                # expect True
+Test-Path "$dir\_internal\models\base.en\model.bin"                # expect True
 Start-Process "$dir\LocalDictation.exe" -ArgumentList "--self-test","C:\tmp\ld-st.txt" -Wait
-Get-Content C:\tmp\ld-st.txt                             # expect: OK source=C:\tmp\ld-install-test\models\base.en
+Get-Content C:\tmp\ld-st.txt                             # expect: OK source=C:\tmp\ld-install-test\_internal\models\base.en
 Start-Process "$dir\unins000.exe" -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES" -Wait   # /VERYSILENT alone still shows the "delete settings?" dialog and waits
 Test-Path $dir                                           # expect False
 Test-Path "$env:APPDATA\LocalDictation"                  # expect unchanged (silent uninstall keeps data)
@@ -668,7 +668,7 @@ Append a section:
 
 ```
 ## Packaging (`packaging/`)
-`build.ps1` → reads the version from `pyproject.toml` → fetches `base.en` into `packaging/model-cache/` → PyInstaller (`local-dictation.spec`, one-folder, windowed) → runs the frozen exe with `--self-test` → Inno Setup (`installer.iss`) → `dist/LocalDictation-<version>-Setup.exe`. The model sits beside the exe in `models/base.en/`; `transcribe._model_source` prefers it when frozen. Per-user install under `%LOCALAPPDATA%\Programs\Local Dictation`; the installer's `AppMutex` is the app's single-instance mutex.
+`build.ps1` → reads the version from `pyproject.toml` → fetches `base.en` into `packaging/model-cache/` → PyInstaller (`local-dictation.spec`, one-folder, windowed) → runs the frozen exe with `--self-test` → Inno Setup (`installer.iss`) → `dist/LocalDictation-<version>-Setup.exe`. The model sits in PyInstaller's data folder (`_internal`, next to the exe) in `models/base.en/`; `transcribe._model_source` prefers it when frozen. Per-user install under `%LOCALAPPDATA%\Programs\Local Dictation`; the installer's `AppMutex` is the app's single-instance mutex.
 ```
 
 - [ ] **Step 3: `docs/decisions.md`**

@@ -3,12 +3,14 @@
 Status as of v0.2.0 (installer shipped; v0.1.0 was run-from-source with Poetry).
 
 ## Done: installer (v0.2.0)
-`packaging/build.ps1` builds `dist/LocalDictation-<version>-Setup.exe` (about 216 MB, `base.en` bundled, per-user, unsigned). Design: `docs/superpowers/specs/2026-10-15-installer-design.md`; plan: `docs/superpowers/plans/2026-10-15-windows-installer.md`. The clean-machine pass (`docs/manual-test-checklist.md` items 15-19) is still to be done by a person.
+`packaging/build.ps1` builds `dist/LocalDictation-<version>-Setup.exe` (about 216 MB, `base.en` bundled, per-user, unsigned). Design: `docs/superpowers/specs/2026-10-15-installer-design.md`; plan: `docs/superpowers/plans/2026-10-15-windows-installer.md`. Tried by the author on the development machine (install, reinstall); the clean-machine pass (`docs/manual-test-checklist.md` items 15-19) has not been done. Released as v0.2.0 with the installer attached to the GitHub release.
 
 ### Deferred installer work
 - **Code signing** and the SmartScreen / antivirus story, if the audience grows beyond trusted people.
 - **GitHub Actions** workflow that builds the installer on tag push and attaches it to the release.
 - **Installer and exe icon** (the tray icon is drawn at runtime; the exe has the default icon).
+- **Clean-machine check** (Visual C++ runtime, SmartScreen) if the app is shared beyond the author.
+- **Small installer nits**: the model cache `.cache` metadata is bundled; the build self-test does not create a `QApplication`; the build script breaks on a repo path containing a single quote; models downloaded on demand are not removed on uninstall.
 - **Upgrade-over-running-instance** and **uninstall** are covered by checklist items 18-19, not by automation.
 
 ## Also deferred (small, from the v0.1.0 reviews)

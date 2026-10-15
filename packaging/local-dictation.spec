@@ -13,7 +13,7 @@ for pkg in ("faster_whisper", "ctranslate2", "onnxruntime", "sounddevice", "_sou
     hiddenimports += h
 hiddenimports += ["pynput.keyboard._win32", "pynput.mouse._win32"]
 
-# The Whisper model fetched by build.ps1 ships beside the exe as models/base.en.
+# The Whisper model fetched by build.ps1 ships in PyInstaller's data folder (_internal, next to the exe) as models/base.en.
 datas += [(str(root / "packaging" / "model-cache" / "base.en"), "models/base.en")]
 
 a = Analysis(

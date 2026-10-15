@@ -55,6 +55,13 @@ See `CLAUDE.md` and `docs/` for architecture, decisions and the manual test chec
 
 - Windows only. Elevated (administrator) windows do not receive input from a non-elevated process, so dictation does not work into them unless the app is also elevated.
 - Only text on the clipboard is restored after pasting.
+- The installer is **not code-signed** (SmartScreen "Unknown publisher") and the global keyboard hook can trigger antivirus warnings; see Install above.
+- 64-bit Windows only. The installer bundles the Python runtime and libraries, but it has only been tried on the development machine. A PC without the Microsoft Visual C++ runtime may fail to start the app; if so, install the "Visual C++ Redistributable (x64)" from Microsoft.
+- Only the default `base.en` model is bundled. Choosing another model in Settings downloads it from Hugging Face on first use (the only internet access besides a local Ollama), and it stays in `%USERPROFILE%\.cache\huggingface` after uninstall.
+- GPU (`cuda`) is not supported by the installer build: the CUDA libraries are not bundled. Use `cpu`.
+- If the hook stops responding (Windows can silently drop a slow keyboard hook), use tray → **Restart hotkey**.
+- Running from source and the installed app on the same PC share one settings file and one "Start with Windows" entry; whichever you start last owns that entry.
+- The installer is about 216 MB because it includes the speech model and the full Qt and Whisper runtimes.
 
 ## Performance
 

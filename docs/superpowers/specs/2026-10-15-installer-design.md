@@ -30,7 +30,7 @@ Not in scope: code signing, auto-update, per-machine install, GitHub Actions rel
 - `packaging/build.ps1` — single entry point:
   1. Read the version from `pyproject.toml`.
   2. Ensure `packaging/model-cache/base.en/` exists; if not, fetch it with faster-whisper's own downloader so the files match what the app loads today.
-  3. Run PyInstaller with `packaging/local-dictation.spec` (windowed, one-folder, entry `local_dictation.app:main`). The spec collects data files and binaries for faster-whisper, CTranslate2, onnxruntime, PySide6 and sounddevice (PortAudio), and copies the model to `models/base.en/` beside the exe.
+  3. Run PyInstaller with `packaging/local-dictation.spec` (windowed, one-folder, entry `local_dictation.app:main`). The spec collects data files and binaries for faster-whisper, CTranslate2, onnxruntime, PySide6 and sounddevice (PortAudio), and copies the model to `models/base.en/` in PyInstaller's data folder (`_internal`, next to the exe).
   4. Run the Inno compiler on `packaging/installer.iss`, passing the version; output `dist/LocalDictation-<version>-Setup.exe`.
 - `dist/`, `build/` are already git-ignored; add `packaging/model-cache/`.
 - PyInstaller is a Poetry dev dependency. Inno Setup 6 must be installed on the build machine (documented, not automated).
