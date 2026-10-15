@@ -1,5 +1,0 @@
-faster-whisper>=1.2
-sounddevice>=0.5
-numpy
-pynput>=1.8
-pyperclip>=1.11

@@ -16,8 +16,10 @@ One long-running tray app (PySide6, single Qt event loop). See the design spec i
 | `config.py` | `Config` (validated), `ConfigStore` (JSON in `%APPDATA%`) |
 | `controller.py` | `Controller` state machine: idle → recording → transcribing → (ready) → pasting → idle |
 | `startup.py` | Start with Windows (HKCU Run key) |
-| `ui/tray.py`, `ui/settings.py` | Tray icon + menu; settings dialog with shortcut capture widget |
-| `app.py` | Wiring, logging, single-instance mutex, `main()` |
+| `ui/tray.py` | `TrayIcon`: state-coloured icon + menu (Settings, Restart hotkey, Quit) |
+| `ui/settings.py` | `SettingsDialog` and `ShortcutEdit` (shortcut capture via the hook; cancels capture when the dialog closes) |
+| `app.py` | Wiring, logging, single-instance mutex, `Bridge` (controller callbacks to Qt signals), `main()` |
+| `__main__.py` | `python -m local_dictation` entry point (calls `app.main()`) |
 
 ## Data flow
 hook thread → `ShortcutMatcher` → `EventDispatcher` queue → dispatcher thread → `Controller.handle_hotkey(binding, kind)` → recorder / worker thread (transcribe → cleanup → paste) → callbacks → `Bridge` Qt signals → tray.

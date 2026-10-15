@@ -11,3 +11,7 @@
 - **Side-agnostic keys** (`ctrl` matches either Ctrl) — simpler UI; the old Right-Ctrl default is gone.
 - **Poetry with in-project `.venv`** (`poetry.toml`) — editors find the interpreter; reuses the repo-local venv convention.
 - **Known limitation** — elevated (admin) windows do not receive/trigger input from a non-elevated process.
+
+## Unverified assumptions (need a human at the keyboard)
+- Start-menu suppression via the unassigned virtual key 0xE8 (injected with `keybd_event` when a Win shortcut activates) is unverified on a real desktop. Fallbacks to try: 0xFF or tapping Left Shift (0xA0). Items 2-5 of `docs/manual-test-checklist.md` verify it.
+- The hook is never re-installed if Windows silently times it out; Tray > Restart hotkey is the recovery.
