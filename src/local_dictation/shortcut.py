@@ -68,6 +68,10 @@ class Shortcut:
         if len(others) > 1:
             return False
         if len(others) < len(self.keys):  # contains a modifier
+            if not others:  # modifiers only: a lone modifier would be swallowed everywhere
+                return len(self.keys) > 1
+            if self.keys - set(others) == {"shift"}:  # shift+letter hijacks typing
+                return others[0][0] == "f" and others[0][1:].isdigit()
             return True
         return len(others) == 1 and others[0][0] == "f" and others[0][1:].isdigit()
 

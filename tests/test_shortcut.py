@@ -32,7 +32,9 @@ def test_parse_empty_raises():
 
 
 @pytest.mark.parametrize("text, safe", [
-    ("ctrl+win", True), ("ctrl+alt+space", True), ("f9", True), ("win", True),
+    ("ctrl+win", True), ("ctrl+alt+space", True), ("f9", True), ("shift+f9", True),
+    ("ctrl+shift+space", True), ("alt+f4", True),
+    ("ctrl", False), ("shift", False), ("alt", False), ("win", False), ("shift+a", False),
     ("a", False), ("space", False), ("ctrl+a+b", False), ("esc", False),
 ])
 def test_is_safe(text, safe):
