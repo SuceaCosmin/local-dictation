@@ -1,0 +1,30 @@
+[project]
+name = "local-dictation"
+version = "0.1.0"
+description = "Offline push-to-talk dictation for Windows (local Whisper), a local alternative to Wispr Flow"
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+    "faster-whisper>=1.2",
+    "sounddevice>=0.5",
+    "numpy>=2.0",
+    "pynput>=1.8",
+    "pyperclip>=1.11",
+    "PySide6>=6.7",
+]
+
+[project.scripts]
+local-dictation = "local_dictation.app:main"
+
+[tool.poetry]
+packages = [{ include = "local_dictation", from = "src" }]
+
+[tool.poetry.group.dev.dependencies]
+pytest = ">=8.0"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[build-system]
+requires = ["poetry-core>=2.0"]
+build-backend = "poetry.core.masonry.api"
