@@ -24,6 +24,7 @@ class ShortcutEdit(QWidget):
         super().__init__(parent)
         self._listener = listener
         self._value = value
+        self._capturing = False
         self._field = QLineEdit(value)
         self._field.setReadOnly(True)
         self._button = QPushButton("Change…")
@@ -47,6 +48,7 @@ class ShortcutEdit(QWidget):
         self._field.setText(value)
 
     def begin(self) -> None:
+        self._capturing = True
         self._button.setEnabled(False)
         self._field.setText("Press the keys… (Esc cancels)")
         self._timer.start()
@@ -57,6 +59,9 @@ class ShortcutEdit(QWidget):
         self._field.setText(text or "Press the keys… (Esc cancels)")
 
     def _on_finished(self, shortcut: Shortcut | None) -> None:
+        if not self._capturing:  # late queued result after cancel/timeout
+            return
+        self._capturing = False
         self._timer.stop()
         self._button.setEnabled(True)
         if shortcut is not None:
@@ -64,9 +69,15 @@ class ShortcutEdit(QWidget):
             self.changed.emit(self._value)
         self._field.setText(self._value)
 
-    def _on_timeout(self) -> None:
+    def cancel(self) -> None:
+        """Abort an in-progress capture started by this edit (no-op otherwise)."""
+        if not self._capturing:
+            return
         self._listener.cancel_capture()
         self._on_finished(None)
+
+    def _on_timeout(self) -> None:
+        self.cancel()
 
 
 class SettingsDialog(QDialog):
@@ -131,6 +142,12 @@ class SettingsDialog(QDialog):
             cleanup_model=self.cleanup_edit.text().strip(),
             start_with_windows=self.startup_check.isChecked(),
         )
+
+    def done(self, result: int) -> None:
+        # covers accept, reject and window close: never leave the global hook in capture mode
+        self.record_edit.cancel()
+        self.paste_edit.cancel()
+        super().done(result)
 
     def accept(self) -> None:
         errors = self.to_config().validate()
