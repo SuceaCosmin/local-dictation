@@ -36,6 +36,7 @@ def make_icon(color: str) -> QIcon:
 
 
 class TrayIcon(QObject):
+    welcome_requested = Signal()
     settings_requested = Signal()
     restart_requested = Signal()
     quit_requested = Signal()
@@ -44,7 +45,8 @@ class TrayIcon(QObject):
         super().__init__(parent)
         self._tray = QSystemTrayIcon(make_icon(STATE_COLORS["loading"]))
         self._menu = QMenu()
-        for text, signal in (("Settings…", self.settings_requested),
+        for text, signal in (("How to use…", self.welcome_requested),
+                             ("Settings…", self.settings_requested),
                              ("Restart hotkey", self.restart_requested),
                              ("Quit", self.quit_requested)):
             action = QAction(text, self._menu)
@@ -53,6 +55,7 @@ class TrayIcon(QObject):
         self._tray.setContextMenu(self._menu)
         self._tray.activated.connect(self._on_activated)
         self._model_ready = False
+        self.model_status = "loading"
         self.set_state("loading")
         self._tray.show()
 
@@ -66,6 +69,7 @@ class TrayIcon(QObject):
         self._tray.setToolTip(f"Local Dictation — {STATE_TEXT.get(shown, shown)}")
 
     def set_model_status(self, status: str) -> None:
+        self.model_status = status
         if status == "loading":
             self._model_ready = False
             self.set_state("loading")
