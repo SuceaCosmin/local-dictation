@@ -76,6 +76,15 @@ class Shortcut:
         return len(others) == 1 and others[0][0] == "f" and others[0][1:].isdigit()
 
 
+def keycaps(text: str) -> list[str]:
+    """Display labels for a shortcut string, modifiers first ("ctrl+win" -> ["Ctrl", "Win"])."""
+    try:
+        names = Shortcut.parse(text).format().split("+")
+    except ValueError:
+        return []
+    return [n.upper() if n.startswith("f") and n[1:].isdigit() else n.capitalize() for n in names]
+
+
 @dataclass(frozen=True)
 class Decision:
     swallow: bool = False
