@@ -74,6 +74,16 @@ def apply_shortcut_change(store, value: str, apply_runtime) -> list[str]:
     return []
 
 
+def mark_welcome_shown(store) -> None:
+    """Remember that the welcome window was shown; never overwrites a config file we could not read."""
+    if store.invalid:
+        return
+    try:
+        store.update(replace(store.config, welcome_shown=True))
+    except OSError:
+        log.exception("could not record that the welcome window was shown")
+
+
 class Bridge(QObject):
     """Turns callbacks from worker threads into queued Qt signals."""
     state_changed = Signal(str)
@@ -136,6 +146,8 @@ def main() -> int:
         nonlocal dialog_open
         if dialog_open:
             return
+        if welcome is not None:
+            welcome.shortcut_edit.cancel()  # the hook has one capture slot; do not let two widgets share it
         dialog_open = True
         try:
             dialog = SettingsDialog(store.config, listener)
@@ -184,10 +196,7 @@ def main() -> int:
     apply_runtime(store.config, None)
     start_listener()
     if not store.config.welcome_shown:
-        try:
-            store.update(replace(store.config, welcome_shown=True))
-        except OSError:
-            log.exception("could not record that the welcome window was shown")
+        mark_welcome_shown(store)
         open_welcome()
     log.info("Local Dictation started (shortcut: %s)", store.config.record_shortcut)
     return qapp.exec()

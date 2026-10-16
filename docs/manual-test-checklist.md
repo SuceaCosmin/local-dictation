@@ -32,3 +32,5 @@ On a machine or user account without Python:
 23. Close the window while "Press the keys…" is showing → afterwards normal typing still works (capture was cancelled).
 24. Windows light and dark app mode: the window is readable in both.
 25. Open the window with a broken model name in config → red error text, no progress bar.
+26. Welcome window → Change… (capture running), then open Settings from the tray → the welcome capture is cancelled, and the Settings shortcut capture works normally.
+27. Put a deliberately broken `config.json` (trailing comma) in place and start the app → the file is left untouched (the welcome window shows, defaults are used).

@@ -1,4 +1,4 @@
-from local_dictation.app import apply_shortcut_change, apply_startup
+from local_dictation.app import apply_shortcut_change, apply_startup, mark_welcome_shown
 from local_dictation.config import ConfigStore
 
 
@@ -53,3 +53,16 @@ def test_apply_shortcut_change_reports_save_failure(tmp_path):
     assert errors and "disk full" in errors[0]
     assert store.config.record_shortcut == "ctrl+win"
     assert calls == []
+
+
+def test_mark_welcome_shown_saves_the_flag(tmp_path):
+    store = ConfigStore(tmp_path / "config.json")
+    mark_welcome_shown(store)
+    assert ConfigStore(tmp_path / "config.json").config.welcome_shown is True
+
+
+def test_mark_welcome_shown_never_overwrites_a_broken_config(tmp_path):
+    path = tmp_path / "config.json"
+    path.write_text('{"model": "small.en",}', encoding="utf-8")
+    mark_welcome_shown(ConfigStore(path))
+    assert path.read_text(encoding="utf-8") == '{"model": "small.en",}'

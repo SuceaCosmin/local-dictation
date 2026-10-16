@@ -29,7 +29,7 @@ Assumptions (confirmed in discussion): audience is people who install the Setup.
 
 ## Structure
 - `ui/theme.py`: colour tokens and one stylesheet function, choosing light or dark from the system palette. Used by the welcome window first; the Settings redesign reuses it.
-- `shortcut.py` (pure): `keycaps(text) -> list[str]`, for example `"ctrl+win"` gives `["Ctrl", "Win"]`, `"ctrl+shift+space"` gives `["Ctrl", "Shift", "Space"]`. Unknown keys are title-cased; modifier order follows `MODIFIER_ORDER`.
+- `shortcut.py` (pure): `keycaps(text) -> list[str]`, for example `"ctrl+win"` gives `["Ctrl", "Win"]`, `"ctrl+shift+space"` gives `["Ctrl", "Shift", "Space"]`. Unknown keys are capitalized (first letter only); modifier order follows `MODIFIER_ORDER`.
 - `config.py`: add `welcome_shown`. `from_dict` already ignores missing keys and type-mismatched values.
 - `ui/tray.py`: new `welcome_requested` signal and menu action.
 - `app.py`: create/raise the window, first-run check, `apply_shortcut_change` helper (validate, save, apply; returns errors), wiring. The window takes the listener and config as constructor arguments like `SettingsDialog`, and emits a `shortcut_changed(str)` signal; `app.py` does the saving.
