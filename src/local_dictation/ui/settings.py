@@ -1,6 +1,8 @@
 """Settings dialog and the shortcut-capture widget."""
 from __future__ import annotations
 
+from dataclasses import replace
+
 from PySide6.QtCore import QTimer, Signal
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFormLayout,
                                QHBoxLayout, QLabel, QLineEdit, QPushButton, QWidget)
@@ -83,6 +85,7 @@ class ShortcutEdit(QWidget):
 class SettingsDialog(QDialog):
     def __init__(self, config: Config, listener, parent=None):
         super().__init__(parent)
+        self._config = config
         self.setWindowTitle("Local Dictation — Settings")
         self.setMinimumWidth(460)
 
@@ -132,7 +135,8 @@ class SettingsDialog(QDialog):
         self.paste_edit.setEnabled(self.stop_mode_combo.currentData() == "combo")
 
     def to_config(self) -> Config:
-        return Config(
+        return replace(
+            self._config,
             record_shortcut=self.record_edit.value(),
             stop_mode=self.stop_mode_combo.currentData(),
             paste_shortcut=self.paste_edit.value(),

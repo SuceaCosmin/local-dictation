@@ -44,6 +44,7 @@ class Config:
     language: str = ""
     cleanup_model: str = ""
     start_with_windows: bool = False
+    welcome_shown: bool = False
 
     @classmethod
     def from_dict(cls, data) -> "Config":

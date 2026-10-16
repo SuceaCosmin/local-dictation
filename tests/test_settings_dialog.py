@@ -98,3 +98,8 @@ def test_late_done_after_cancel_is_ignored(qapp):
     listener.on_done(Shortcut.parse("ctrl+alt+space"))
     qapp.processEvents()
     assert dlg.record_edit.value() == "ctrl+win"
+
+
+def test_saving_settings_keeps_welcome_shown(qapp):
+    cfg = Config(welcome_shown=True)
+    assert SettingsDialog(cfg, FakeListener()).to_config().welcome_shown is True
