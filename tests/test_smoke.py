@@ -2,4 +2,4 @@ import local_dictation
 
 
 def test_package_has_version():
-    assert local_dictation.__version__ == "0.2.0"
+    assert local_dictation.__version__ == "0.3.0"

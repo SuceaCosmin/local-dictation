@@ -191,3 +191,74 @@ def test_combo_paste_with_nothing_pending_is_ignored():
     c, *_ = build(Config(stop_mode="combo"), paster=paster)
     c.handle_hotkey("paste", "pressed")
     assert paster.pasted == [] and c.state is State.IDLE
+
+
+def _failing_cleanup(text, model):
+    raise RuntimeError("Ollama request failed: timed out")
+
+
+def _dictate(c):
+    c.handle_hotkey("record", "pressed")
+    c.handle_hotkey("record", "released")
+
+
+def test_cleanup_failure_pastes_raw_text_and_notifies():
+    paster = FakePaster()
+    c, _, notes, _ = build(Config(cleanup_model="qwen"), paster=paster, cleanup=_failing_cleanup)
+    _dictate(c)
+    assert paster.pasted == ["hello world "]
+    assert c.state is State.IDLE
+    assert len(notes) == 1 and notes[0][0] == "Cleanup skipped"
+    assert "timed out" in notes[0][1]
+
+
+def test_cleanup_failure_notifies_once_per_streak():
+    paster = FakePaster()
+    c, _, notes, _ = build(Config(cleanup_model="qwen"), paster=paster, cleanup=_failing_cleanup)
+    _dictate(c)
+    _dictate(c)
+    assert paster.pasted == ["hello world ", "hello world "]
+    assert len(notes) == 1
+
+
+def test_cleanup_failure_notifies_again_after_a_success():
+    outcomes = [RuntimeError("down"), "ok", RuntimeError("down again")]
+
+    def flaky(text, model):
+        outcome = outcomes.pop(0)
+        if isinstance(outcome, Exception):
+            raise outcome
+        return outcome
+
+    c, _, notes, _ = build(Config(cleanup_model="qwen"), cleanup=flaky)
+    _dictate(c)
+    _dictate(c)
+    _dictate(c)
+    assert [n[0] for n in notes] == ["Cleanup skipped", "Cleanup skipped"]
+
+
+def test_cleanup_shows_a_cleaning_state_before_pasting():
+    c, states, *_ = build(Config(cleanup_model="qwen"))
+    _dictate(c)
+    assert states == ["recording", "transcribing", "cleaning", "pasting", "idle"]
+
+
+def test_no_cleaning_state_without_a_cleanup_model():
+    c, states, *_ = build(Config())
+    _dictate(c)
+    assert "cleaning" not in states
+
+
+def test_failed_cleanup_still_ends_with_pasting():
+    c, states, *_ = build(Config(cleanup_model="qwen"), cleanup=_failing_cleanup)
+    _dictate(c)
+    assert states == ["recording", "transcribing", "cleaning", "pasting", "idle"]
+
+
+def test_combo_mode_cleanup_never_shows_pasting_before_cleaning():
+    c, states, *_ = build(Config(stop_mode="combo", cleanup_model="qwen"))
+    _dictate(c)
+    c.handle_hotkey("paste", "pressed")
+    after_ready = states[states.index("ready") + 1:]
+    assert after_ready[0] == "cleaning"
+    assert after_ready[-2:] == ["pasting", "idle"]

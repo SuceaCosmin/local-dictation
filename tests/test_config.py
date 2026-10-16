@@ -88,3 +88,34 @@ def test_defaults_valid_in_combo_mode():
 def test_combo_rejects_shortcuts_containing_one_another(record, paste):
     cfg = Config(stop_mode="combo", record_shortcut=record, paste_shortcut=paste)
     assert any("must not contain one another" in e for e in cfg.validate())
+
+
+def test_welcome_shown_defaults_false_and_roundtrips(tmp_path):
+    store = ConfigStore(tmp_path / "config.json")
+    assert store.config.welcome_shown is False
+    store.update(Config(welcome_shown=True))
+    assert ConfigStore(tmp_path / "config.json").config.welcome_shown is True
+
+
+def test_config_file_from_older_version_is_still_valid(tmp_path):
+    path = tmp_path / "config.json"
+    path.write_text(json.dumps({"record_shortcut": "f9", "model": "small.en"}), encoding="utf-8")
+    cfg = ConfigStore(path).config
+    assert cfg.record_shortcut == "f9" and cfg.model == "small.en"
+    assert cfg.welcome_shown is False
+
+
+def test_store_flags_an_unreadable_or_invalid_file(tmp_path):
+    bad = tmp_path / "bad.json"
+    bad.write_text('{"model": "small.en",}', encoding="utf-8")
+    assert ConfigStore(bad).invalid is True
+    unsafe = tmp_path / "unsafe.json"
+    unsafe.write_text(json.dumps({"record_shortcut": "a"}), encoding="utf-8")
+    assert ConfigStore(unsafe).invalid is True
+
+
+def test_store_does_not_flag_missing_or_valid_files(tmp_path):
+    assert ConfigStore(tmp_path / "missing.json").invalid is False
+    ok = tmp_path / "ok.json"
+    ok.write_text(json.dumps({"model": "small.en"}), encoding="utf-8")
+    assert ConfigStore(ok).invalid is False

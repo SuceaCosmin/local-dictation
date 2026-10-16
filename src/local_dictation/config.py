@@ -44,6 +44,7 @@ class Config:
     language: str = ""
     cleanup_model: str = ""
     start_with_windows: bool = False
+    welcome_shown: bool = False
 
     @classmethod
     def from_dict(cls, data) -> "Config":
@@ -81,6 +82,7 @@ class Config:
 class ConfigStore:
     def __init__(self, path: Path | None = None):
         self.path = path or default_config_path()
+        self.invalid = False  # True when a file exists but could not be used; it must not be overwritten
         self.config = self._load()
 
     def _load(self) -> Config:
@@ -90,11 +92,13 @@ class ConfigStore:
             return Config()
         except (OSError, ValueError) as e:
             log.warning("Could not read %s (%s); using defaults", self.path, e)
+            self.invalid = True
             return Config()
         cfg = Config.from_dict(data)
         errors = cfg.validate()
         if errors:
             log.warning("Invalid config (%s); using defaults", "; ".join(errors))
+            self.invalid = True
             return Config()
         return cfg
 

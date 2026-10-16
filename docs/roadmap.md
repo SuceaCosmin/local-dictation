@@ -1,6 +1,17 @@
 # Roadmap
 
-Status as of v0.2.0 (installer shipped; v0.1.0 was run-from-source with Poetry).
+Status as of v0.3.0 (welcome window, select-only Settings, working Ollama cleanup; v0.2.0 shipped the installer, v0.1.0 was run-from-source with Poetry).
+
+## Done: v0.3.0 UX update (UX review, part 1)
+Spec: `docs/superpowers/specs/2026-10-16-welcome-window-design.md`; plan: `docs/superpowers/plans/2026-10-16-welcome-window.md`. Opens on first launch and from tray > How to use…; shows the keycaps, lets the user change the shortcut, shows model status and has a practice box to try dictation.
+- **Settings are select-only** (Whisper model, device, language, cleanup model); the cleanup model is picked from the models installed in Ollama.
+- **Ollama cleanup fixed**: requests send `think: false` (thinking models used to time out silently), failures show one tray notification, and the tray shows a purple "Cleaning up text…" state while the model works. See `docs/decisions.md`.
+- Known gap: a cold load of a large cleanup model (for example `qwen3.5:4b` on a laptop CPU) can exceed the 30 s timeout; small models such as `qwen3.5:0.8b` work.
+
+### Next UX review sub-projects (each needs its own spec)
+- **Recording/status overlay**: small floating pill showing recording / transcribing / cleaning up / done (the controller already has the `cleaning` state). Reverses the old "no overlay" non-goal in `docs/purpose.md`.
+- **Settings redesign**: grouped and themed (reuse `ui/theme.py`), plain-language Whisper model names (selection is already select-only).
+- **Visual identity**: app/tray/installer icon and a shared look across windows.
 
 ## Done: installer (v0.2.0)
 `packaging/build.ps1` builds `dist/LocalDictation-<version>-Setup.exe` (about 216 MB, `base.en` bundled, per-user, unsigned). Design: `docs/superpowers/specs/2026-10-15-installer-design.md`; plan: `docs/superpowers/plans/2026-10-15-windows-installer.md`. Tried by the author on the development machine (install, reinstall); the clean-machine pass (`docs/manual-test-checklist.md` items 15-19) has not been done. Released as v0.2.0 with the installer attached to the GitHub release.
