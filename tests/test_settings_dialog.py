@@ -1,8 +1,10 @@
 import pytest
 from PySide6.QtWidgets import QApplication
 
+from local_dictation.cleanup import OllamaModel
 from local_dictation.config import Config
 from local_dictation.shortcut import Shortcut
+from local_dictation.ui import settings as settings_module
 from local_dictation.ui.settings import SettingsDialog
 
 
@@ -98,3 +100,82 @@ def test_late_done_after_cancel_is_ignored(qapp):
     listener.on_done(Shortcut.parse("ctrl+alt+space"))
     qapp.processEvents()
     assert dlg.record_edit.value() == "ctrl+win"
+
+
+def test_saving_settings_keeps_welcome_shown(qapp):
+    cfg = Config(welcome_shown=True)
+    assert SettingsDialog(cfg, FakeListener()).to_config().welcome_shown is True
+
+
+@pytest.fixture(autouse=True)
+def no_real_ollama(monkeypatch):
+    """Settings must never talk to the developer's real Ollama during tests."""
+    monkeypatch.setattr(settings_module, "list_installed_models", lambda: None)
+
+
+MODELS = [OllamaModel("qwen3.5:0.8b", "1.2 GB"), OllamaModel("gemma4:26b", "15.8 GB")]
+
+
+def _items(combo):
+    return [(combo.itemText(i), combo.itemData(i)) for i in range(combo.count())]
+
+
+def test_comboboxes_are_select_only(qapp):
+    dlg = SettingsDialog(Config(), FakeListener())
+    for combo in (dlg.model_combo, dlg.device_combo, dlg.language_combo, dlg.cleanup_combo,
+                  dlg.stop_mode_combo):
+        assert combo.isEditable() is False
+
+
+def test_whisper_model_not_in_the_list_is_kept_selectable(qapp):
+    dlg = SettingsDialog(Config(model="my-custom-model"), FakeListener())
+    assert dlg.model_combo.currentText() == "my-custom-model"
+    assert dlg.to_config().model == "my-custom-model"
+
+
+def test_language_is_a_select_with_auto_detect_first(qapp):
+    dlg = SettingsDialog(Config(), FakeListener())
+    assert _items(dlg.language_combo)[0] == ("Auto-detect", "")
+    assert ("Romanian", "ro") in _items(dlg.language_combo)
+    assert dlg.to_config().language == ""
+
+
+def test_language_code_outside_the_list_is_kept(qapp):
+    dlg = SettingsDialog(Config(language="sv"), FakeListener())
+    assert dlg.language_combo.currentData() == "sv"
+    assert dlg.to_config().language == "sv"
+
+
+def test_cleanup_lists_off_and_installed_models(qapp):
+    dlg = SettingsDialog(Config(), FakeListener(), list_models=lambda: MODELS)
+    assert _items(dlg.cleanup_combo) == [("Off", ""), ("qwen3.5:0.8b · 1.2 GB", "qwen3.5:0.8b"),
+                                         ("gemma4:26b · 15.8 GB", "gemma4:26b")]
+    assert dlg.cleanup_combo.currentData() == ""
+    assert dlg.cleanup_hint.isHidden()
+
+
+def test_cleanup_selection_roundtrips(qapp):
+    cfg = Config(cleanup_model="gemma4:26b")
+    dlg = SettingsDialog(cfg, FakeListener(), list_models=lambda: MODELS)
+    assert dlg.cleanup_combo.currentData() == "gemma4:26b"
+    assert dlg.to_config().cleanup_model == "gemma4:26b"
+
+
+def test_saved_cleanup_model_that_is_not_installed_stays_visible(qapp):
+    dlg = SettingsDialog(Config(cleanup_model="llama3:8b"), FakeListener(), list_models=lambda: MODELS)
+    assert dlg.cleanup_combo.currentText() == "llama3:8b (not installed)"
+    assert dlg.to_config().cleanup_model == "llama3:8b"
+
+
+def test_ollama_unreachable_shows_hint_and_keeps_current_value(qapp):
+    dlg = SettingsDialog(Config(cleanup_model="qwen3.5:0.8b"), FakeListener(), list_models=lambda: None)
+    assert not dlg.cleanup_hint.isHidden()
+    assert "not running" in dlg.cleanup_hint.text()
+    assert dlg.to_config().cleanup_model == "qwen3.5:0.8b"
+    assert _items(dlg.cleanup_combo)[0] == ("Off", "")
+
+
+def test_ollama_with_no_models_says_how_to_get_one(qapp):
+    dlg = SettingsDialog(Config(), FakeListener(), list_models=lambda: [])
+    assert "ollama pull" in dlg.cleanup_hint.text()
+    assert dlg.to_config().cleanup_model == ""

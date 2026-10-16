@@ -14,7 +14,7 @@ What to expect, because the installer is not code-signed:
 - Turn on **Start with Windows** in the app's Settings; the installer does not do it.
 - Uninstall from Windows Settings → Apps; it asks whether to delete your settings and logs.
 
-A tray icon shows the state; right-click it for **Settings…**, **Restart hotkey** and **Quit**.
+A tray icon shows the state; right-click it for **How to use…**, **Settings…**, **Restart hotkey** and **Quit**. A welcome window opens on first launch.
 
 ## Run from source
 
@@ -41,7 +41,7 @@ This freezes the app with PyInstaller, checks the frozen exe with `--self-test`,
 
 ## Settings
 
-Shortcut (press-to-record), when to paste (on release, or with a separate shortcut), Whisper model, device (cpu/cuda), language, optional Ollama cleanup model (e.g. `qwen2.5:1.5b`), and start with Windows. Stored in `%APPDATA%\LocalDictation\config.json`; logs in `dictation.log` next to it.
+Shortcut (press-to-record), when to paste (on release, or with a separate shortcut), Whisper model, device (cpu/cuda), language, optional Ollama cleanup model (picked from the models you have installed in Ollama), and start with Windows. Stored in `%APPDATA%\LocalDictation\config.json`; logs in `dictation.log` next to it.
 
 ## Development
 

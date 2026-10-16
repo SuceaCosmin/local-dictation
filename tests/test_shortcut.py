@@ -1,6 +1,6 @@
 import pytest
 
-from local_dictation.shortcut import Shortcut, name_to_vks, vk_to_name
+from local_dictation.shortcut import Shortcut, keycaps, name_to_vks, vk_to_name
 
 
 @pytest.mark.parametrize("vk, name", [
@@ -39,3 +39,19 @@ def test_parse_empty_raises():
 ])
 def test_is_safe(text, safe):
     assert Shortcut.parse(text).is_safe() is safe
+
+
+def test_keycaps_modifiers_use_canonical_order():
+    assert keycaps("win+ctrl") == ["Ctrl", "Win"]
+    assert keycaps("ctrl+shift+space") == ["Ctrl", "Shift", "Space"]
+
+
+def test_keycaps_function_and_letter_keys():
+    assert keycaps("f9") == ["F9"]
+    assert keycaps("ctrl+alt+a") == ["Ctrl", "Alt", "A"]
+
+
+def test_keycaps_empty_and_unknown_do_not_crash():
+    assert keycaps("") == []
+    assert keycaps("  ") == []
+    assert keycaps("ctrl+vk5d") == ["Ctrl", "Vk5d"]
