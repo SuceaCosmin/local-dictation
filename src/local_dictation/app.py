@@ -5,6 +5,7 @@ import ctypes
 import logging
 import logging.handlers
 import sys
+from dataclasses import replace
 from pathlib import Path
 
 from PySide6.QtCore import QObject, Signal
@@ -20,6 +21,7 @@ from .paste import Paster
 from .transcribe import Transcriber
 from .ui.settings import SettingsDialog
 from .ui.tray import TrayIcon
+from .ui.welcome import WelcomeWindow
 
 log = logging.getLogger("local_dictation")
 _mutex_handle = None  # keep the mutex alive for the life of the process
@@ -54,6 +56,22 @@ def apply_startup(enabled: bool, notify, set_enabled=startup.set_enabled) -> boo
         notify("Start with Windows failed", str(e))
         return False
     return True
+
+
+def apply_shortcut_change(store, value: str, apply_runtime) -> list[str]:
+    """Save a new record shortcut; returns error messages (nothing is saved or applied then)."""
+    previous = store.config
+    new = replace(previous, record_shortcut=value)
+    errors = new.validate()
+    if errors:
+        return errors
+    try:
+        store.update(new)
+    except OSError as e:
+        log.exception("could not save the new shortcut")
+        return [f"Could not save the shortcut: {e}"]
+    apply_runtime(new, previous)
+    return []
 
 
 class Bridge(QObject):
@@ -132,15 +150,44 @@ def main() -> int:
         finally:
             dialog_open = False
 
+    welcome: WelcomeWindow | None = None
+
+    def on_welcome_shortcut(value: str) -> None:
+        assert welcome is not None  # connected only after the window exists
+        errors = apply_shortcut_change(store, value, apply_runtime)
+        welcome.set_shortcut(store.config.record_shortcut)  # also clears any old message
+        if errors:
+            welcome.show_error("\n".join(errors))
+
+    def open_welcome() -> None:
+        nonlocal welcome
+        if welcome is None:
+            welcome = WelcomeWindow(store.config.record_shortcut, listener, tray.model_status)
+            welcome.shortcut_changed.connect(on_welcome_shortcut)
+            bridge.model_status.connect(welcome.set_status)
+        else:
+            welcome.set_shortcut(store.config.record_shortcut)
+            welcome.set_status(tray.model_status)
+        welcome.show()
+        welcome.raise_()
+        welcome.activateWindow()
+
     def quit_app() -> None:
         listener.stop()
         qapp.quit()
 
+    tray.welcome_requested.connect(open_welcome)
     tray.settings_requested.connect(open_settings)
     tray.restart_requested.connect(restart_listener)
     tray.quit_requested.connect(quit_app)
 
     apply_runtime(store.config, None)
     start_listener()
+    if not store.config.welcome_shown:
+        try:
+            store.update(replace(store.config, welcome_shown=True))
+        except OSError:
+            log.exception("could not record that the welcome window was shown")
+        open_welcome()
     log.info("Local Dictation started (shortcut: %s)", store.config.record_shortcut)
     return qapp.exec()
