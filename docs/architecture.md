@@ -14,7 +14,7 @@ One long-running tray app (PySide6, single Qt event loop). See the design spec i
 | `cleanup.py` | `ollama_cleanup` (optional polish via local Ollama; raises `CleanupError` on failure, the controller then pastes the raw text and notifies once) and `list_models` (installed models, for the Settings picker) |
 | `paste.py` | `Paster`: wait for modifiers up, clipboard set, Ctrl+V, restore clipboard |
 | `config.py` | `Config` (validated), `ConfigStore` (JSON in `%APPDATA%`) |
-| `controller.py` | `Controller` state machine: idle → recording → transcribing → (ready) → pasting → idle |
+| `controller.py` | `Controller` state machine: idle → recording → transcribing → (ready) → (cleaning) → pasting → idle |
 | `startup.py` | Start with Windows (HKCU Run key) |
 | `paths.py` | Pure: `is_frozen()`, `app_dir()`, `data_dir()`, `bundled_model_path(name)` (model shipped in the installer) |
 | `selftest.py` | `--self-test <outfile>`: imports every heavy dependency, loads the model, runs VAD transcription; used by the build to verify a frozen exe |

@@ -37,3 +37,4 @@ On a machine or user account without Python:
 28. Welcome window → click in the practice box, hold the shortcut, speak, release → the text appears in the box. Change the shortcut in the window → the placeholder shows the new keys.
 29. Settings: Whisper model, Device, Language and Cleanup model cannot be typed into. With Ollama running, the cleanup list shows Off plus your installed models with sizes; pick one, save, dictate with filler words ("um, so I think we should, uh, meet tomorrow") → fillers are removed.
 30. Stop Ollama, dictate with a cleanup model set → raw text is pasted and one "Cleanup skipped" notification appears (not one per dictation). Open Settings with Ollama stopped → hint "Ollama is not running…" and the saved model is still shown.
+31. With a cleanup model set, dictate → the tray icon turns purple with tooltip "Cleaning up text…" while Ollama works, then amber while pasting. Without a cleanup model it never turns purple.

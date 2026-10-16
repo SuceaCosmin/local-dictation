@@ -28,3 +28,10 @@ def test_model_status_is_remembered(qapp):
     assert tray.model_status == "error: boom"
     tray.set_model_status("loading")
     assert tray.model_status == "loading"
+
+
+def test_cleaning_state_has_its_own_colour_and_text(qapp):
+    from local_dictation.ui.tray import STATE_COLORS, STATE_TEXT
+    assert "cleaning" in STATE_COLORS and "cleaning" in STATE_TEXT
+    assert STATE_COLORS["cleaning"] not in (STATE_COLORS["pasting"], STATE_COLORS["transcribing"])
+    assert "Cleaning" in STATE_TEXT["cleaning"]

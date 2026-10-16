@@ -10,6 +10,7 @@ STATE_COLORS = {
     "idle": "#6b7280",
     "recording": "#ef4444",
     "transcribing": "#f59e0b",
+    "cleaning": "#8b5cf6",
     "pasting": "#f59e0b",
     "ready": "#3b82f6",
 }
@@ -18,6 +19,7 @@ STATE_TEXT = {
     "idle": "Idle",
     "recording": "Recording…",
     "transcribing": "Transcribing…",
+    "cleaning": "Cleaning up text…",
     "pasting": "Pasting…",
     "ready": "Text ready — press the paste shortcut",
 }

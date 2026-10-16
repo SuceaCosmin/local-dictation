@@ -7,7 +7,7 @@ A fully local, Windows push-to-talk dictation tool, in the spirit of Wispr Flow 
 2. Audio is captured only while the shortcut is held.
 3. On release (default stop mode) the audio is transcribed, optionally cleaned up, and pasted into the control that currently has keyboard focus.
 4. Alternative stop mode "combo": release ends recording, a second configurable shortcut triggers the paste.
-5. A tray icon shows state (loading, idle, recording, transcribing, ready, pasting); a small settings window changes the shortcut, stop mode, model, device, language, cleanup model and start-with-Windows. A welcome window opens on first launch (and from the tray's "How to use…"): it explains the gesture, offers a shortcut change and shows when the speech model is ready.
+5. A tray icon shows state (loading, idle, recording, transcribing, ready, cleaning up, pasting); a small settings window changes the shortcut, stop mode, model, device, language, cleanup model and start-with-Windows. A welcome window opens on first launch (and from the tray's "How to use…"): it explains the gesture, offers a shortcut change and shows when the speech model is ready.
 
 ## Non-goals (for now)
 Installer (planned; layout must not block it), macOS/Linux, streaming/partial transcription, per-app formatting, custom vocabulary, on-screen recording overlay.

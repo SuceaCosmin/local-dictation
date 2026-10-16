@@ -235,3 +235,30 @@ def test_cleanup_failure_notifies_again_after_a_success():
     _dictate(c)
     _dictate(c)
     assert [n[0] for n in notes] == ["Cleanup skipped", "Cleanup skipped"]
+
+
+def test_cleanup_shows_a_cleaning_state_before_pasting():
+    c, states, *_ = build(Config(cleanup_model="qwen"))
+    _dictate(c)
+    assert states == ["recording", "transcribing", "cleaning", "pasting", "idle"]
+
+
+def test_no_cleaning_state_without_a_cleanup_model():
+    c, states, *_ = build(Config())
+    _dictate(c)
+    assert "cleaning" not in states
+
+
+def test_failed_cleanup_still_ends_with_pasting():
+    c, states, *_ = build(Config(cleanup_model="qwen"), cleanup=_failing_cleanup)
+    _dictate(c)
+    assert states == ["recording", "transcribing", "cleaning", "pasting", "idle"]
+
+
+def test_combo_mode_cleanup_never_shows_pasting_before_cleaning():
+    c, states, *_ = build(Config(stop_mode="combo", cleanup_model="qwen"))
+    _dictate(c)
+    c.handle_hotkey("paste", "pressed")
+    after_ready = states[states.index("ready") + 1:]
+    assert after_ready[0] == "cleaning"
+    assert after_ready[-2:] == ["pasting", "idle"]
