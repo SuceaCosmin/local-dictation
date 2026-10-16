@@ -39,6 +39,7 @@ class Controller:
         self._state = State.IDLE
         self._pending_text: str | None = None
         self._paste_requested = False
+        self._cleanup_warned = False  # one notification per run of cleanup failures
 
     @property
     def state(self) -> State:
@@ -114,12 +115,25 @@ class Controller:
         self._set(State.PASTING)
         try:
             if config.cleanup_model:
-                text = self._cleanup(text, config.cleanup_model)
+                text = self._cleaned(text, config.cleanup_model)
             self._paster.paste(text + " ")
         except Exception as e:
             log.exception("paste failed")
             self._notify("Paste failed", str(e))
         self._set(State.IDLE)
+
+    def _cleaned(self, text: str, model: str) -> str:
+        """Polish the text; on any failure paste the raw text and say so once."""
+        try:
+            result = self._cleanup(text, model)
+        except Exception as e:
+            log.warning("cleanup skipped: %s", e)
+            if not self._cleanup_warned:
+                self._cleanup_warned = True
+                self._notify("Cleanup skipped", f"{e} Pasting the text without cleanup.")
+            return text
+        self._cleanup_warned = False
+        return result
 
     # -- combo mode -------------------------------------------------------
     def _request_paste(self) -> None:

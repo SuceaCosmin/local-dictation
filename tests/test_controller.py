@@ -191,3 +191,47 @@ def test_combo_paste_with_nothing_pending_is_ignored():
     c, *_ = build(Config(stop_mode="combo"), paster=paster)
     c.handle_hotkey("paste", "pressed")
     assert paster.pasted == [] and c.state is State.IDLE
+
+
+def _failing_cleanup(text, model):
+    raise RuntimeError("Ollama request failed: timed out")
+
+
+def _dictate(c):
+    c.handle_hotkey("record", "pressed")
+    c.handle_hotkey("record", "released")
+
+
+def test_cleanup_failure_pastes_raw_text_and_notifies():
+    paster = FakePaster()
+    c, _, notes, _ = build(Config(cleanup_model="qwen"), paster=paster, cleanup=_failing_cleanup)
+    _dictate(c)
+    assert paster.pasted == ["hello world "]
+    assert c.state is State.IDLE
+    assert len(notes) == 1 and notes[0][0] == "Cleanup skipped"
+    assert "timed out" in notes[0][1]
+
+
+def test_cleanup_failure_notifies_once_per_streak():
+    paster = FakePaster()
+    c, _, notes, _ = build(Config(cleanup_model="qwen"), paster=paster, cleanup=_failing_cleanup)
+    _dictate(c)
+    _dictate(c)
+    assert paster.pasted == ["hello world ", "hello world "]
+    assert len(notes) == 1
+
+
+def test_cleanup_failure_notifies_again_after_a_success():
+    outcomes = [RuntimeError("down"), "ok", RuntimeError("down again")]
+
+    def flaky(text, model):
+        outcome = outcomes.pop(0)
+        if isinstance(outcome, Exception):
+            raise outcome
+        return outcome
+
+    c, _, notes, _ = build(Config(cleanup_model="qwen"), cleanup=flaky)
+    _dictate(c)
+    _dictate(c)
+    _dictate(c)
+    assert [n[0] for n in notes] == ["Cleanup skipped", "Cleanup skipped"]
