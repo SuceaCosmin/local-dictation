@@ -27,6 +27,7 @@ QLabel#status[state="ready"] {{ color: {c['ok']}; font-weight: 600; }}
 QLabel#status[state="error"], QLabel#error {{ color: {c['error']}; }}
 QProgressBar {{ border: none; background: {c['keycap_bg']}; height: 6px; border-radius: 3px; }}
 QProgressBar::chunk {{ background: {c['accent']}; border-radius: 3px; }}
+QPlainTextEdit {{ border: 1px solid {c['keycap_border']}; border-radius: 6px; padding: 6px; }}
 QPushButton {{ padding: 6px 16px; }}
 QPushButton#primary {{ background: {c['accent']}; color: #ffffff; border: none;
     border-radius: 6px; padding: 8px 24px; font-weight: 600; }}

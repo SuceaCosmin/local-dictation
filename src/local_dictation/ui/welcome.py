@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import (QHBoxLayout, QLabel, QProgressBar, QPushButton, QVBoxLayout,
-                               QWidget)
+from PySide6.QtWidgets import (QHBoxLayout, QLabel, QPlainTextEdit, QProgressBar, QPushButton,
+                               QVBoxLayout, QWidget)
 
 from ..shortcut import keycaps
 from . import theme
@@ -67,6 +67,9 @@ class WelcomeWindow(QWidget):
         self.status_label = QLabel()
         self.status_label.setObjectName("status")
         self.status_label.setWordWrap(True)
+        # dictation is pasted into whichever control has focus, so a focused text box just works
+        self.practice_box = QPlainTextEdit()
+        self.practice_box.setFixedHeight(84)
         done = QPushButton("Got it")
         done.setObjectName("primary")
         done.clicked.connect(self.close)
@@ -84,6 +87,7 @@ class WelcomeWindow(QWidget):
         layout.addSpacing(6)
         layout.addWidget(self.progress)
         layout.addWidget(self.status_label)
+        layout.addWidget(self.practice_box)
         layout.addSpacing(6)
         layout.addWidget(done, alignment=Qt.AlignRight)
 
@@ -92,7 +96,11 @@ class WelcomeWindow(QWidget):
 
     def set_shortcut(self, value: str) -> None:
         self.shortcut_edit.set_value(value)
-        self.keycap_row.set_keys(keycaps(value))
+        caps = keycaps(value)
+        self.keycap_row.set_keys(caps)
+        held = " + ".join(caps) if caps else "your shortcut"
+        self.practice_box.setPlaceholderText(
+            f"Try it here: click in this box, hold {held}, say something, then release.")
         self.error_label.setText("")
 
     def show_error(self, message: str) -> None:
@@ -112,6 +120,10 @@ class WelcomeWindow(QWidget):
         self.status_label.setProperty("state", state)
         self.status_label.style().unpolish(self.status_label)
         self.status_label.style().polish(self.status_label)
+
+    def showEvent(self, event) -> None:
+        super().showEvent(event)
+        self.practice_box.setFocus()
 
     def closeEvent(self, event) -> None:
         self.shortcut_edit.cancel()  # never leave the global hook in capture mode

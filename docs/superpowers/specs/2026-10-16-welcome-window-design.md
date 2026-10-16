@@ -17,7 +17,8 @@ Assumptions (confirmed in discussion): audience is people who install the Setup.
   2. Keycap row built from the current record shortcut (for example `Ctrl` + `Win`) and the line "Hold, speak, release. Your words are pasted where your cursor is."
   3. Shortcut row reusing `ShortcutEdit` (including its capture-through-the-hook behaviour and cancel on close).
   4. Model status row: loading = indeterminate progress bar and "Preparing the speech model…"; ready = green "Ready. Try it now."; error = the error text in red plus "Open Settings to choose another model, or use tray → Restart hotkey."
-  5. "Got it" button that closes the window.
+  5. Practice box (added after the first review): a text box that takes focus when the window opens. Dictation is pasted into the focused control, so the user clicks in, holds the shortcut, speaks, and sees the text appear. The placeholder names the current shortcut and follows shortcut changes.
+  6. "Got it" button that closes the window.
 - Shown automatically on first launch once the tray exists; raised above other windows. Tray menu gets "How to use…" (above "Settings…") which reopens it.
 - New config field `welcome_shown: bool = False`. Set to true and saved when the window first opens (not on dismiss), so a crash never causes repeat nagging. Old config files without the key load as `False`; existing users therefore see the window once after upgrading, which is accepted.
 - Changing the shortcut in the window saves it through the same path as Settings (`store.update` then `apply_runtime`), so the hook rebinds immediately. A validation failure shows the message inline in the window and keeps the old shortcut.
@@ -44,4 +45,4 @@ Assumptions (confirmed in discussion): audience is people who install the Setup.
 `architecture.md` (new modules, data flow note), `purpose.md` (target behaviour item for the welcome window), `manual-test-checklist.md`, `roadmap.md` (this item done, remaining UX sub-projects listed), README tray paragraph.
 
 ## Not doing
-Multi-step wizard, practice box, download percentage, tray-location tips, start-with-Windows prompt, a persisted "don't show again" checkbox.
+Multi-step wizard, download percentage, tray-location tips, start-with-Windows prompt, a persisted "don't show again" checkbox.

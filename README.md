@@ -41,7 +41,7 @@ This freezes the app with PyInstaller, checks the frozen exe with `--self-test`,
 
 ## Settings
 
-Shortcut (press-to-record), when to paste (on release, or with a separate shortcut), Whisper model, device (cpu/cuda), language, optional Ollama cleanup model (e.g. `qwen2.5:1.5b`), and start with Windows. Stored in `%APPDATA%\LocalDictation\config.json`; logs in `dictation.log` next to it.
+Shortcut (press-to-record), when to paste (on release, or with a separate shortcut), Whisper model, device (cpu/cuda), language, optional Ollama cleanup model (picked from the models you have installed in Ollama), and start with Windows. Stored in `%APPDATA%\LocalDictation\config.json`; logs in `dictation.log` next to it.
 
 ## Development
 

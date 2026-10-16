@@ -89,3 +89,28 @@ def test_closing_without_capture_does_not_cancel(qapp):
     listener = FakeListener()
     WelcomeWindow("ctrl+win", listener).close()
     assert listener.cancelled is False
+
+
+def test_practice_box_placeholder_names_the_shortcut(qapp):
+    win = WelcomeWindow("ctrl+win", FakeListener())
+    assert "Ctrl + Win" in win.practice_box.placeholderText()
+
+
+def test_practice_box_placeholder_follows_shortcut_changes(qapp):
+    win = WelcomeWindow("ctrl+win", FakeListener())
+    win.set_shortcut("f9")
+    assert "F9" in win.practice_box.placeholderText()
+    assert "Win" not in win.practice_box.placeholderText()
+
+
+def test_practice_box_placeholder_without_a_shortcut_does_not_crash(qapp):
+    win = WelcomeWindow("", FakeListener())
+    assert "your shortcut" in win.practice_box.placeholderText()
+
+
+def test_practice_box_gets_focus_when_the_window_opens(qapp):
+    win = WelcomeWindow("ctrl+win", FakeListener())
+    win.show()
+    qapp.processEvents()
+    assert win.focusWidget() is win.practice_box
+    win.close()

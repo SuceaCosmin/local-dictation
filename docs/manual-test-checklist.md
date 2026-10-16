@@ -34,3 +34,6 @@ On a machine or user account without Python:
 25. Open the window with a broken model name in config → red error text, no progress bar.
 26. Welcome window → Change… (capture running), then open Settings from the tray → the welcome capture is cancelled, and the Settings shortcut capture works normally.
 27. Put a deliberately broken `config.json` (trailing comma) in place and start the app → the file is left untouched (the welcome window shows, defaults are used).
+28. Welcome window → click in the practice box, hold the shortcut, speak, release → the text appears in the box. Change the shortcut in the window → the placeholder shows the new keys.
+29. Settings: Whisper model, Device, Language and Cleanup model cannot be typed into. With Ollama running, the cleanup list shows Off plus your installed models with sizes; pick one, save, dictate with filler words ("um, so I think we should, uh, meet tomorrow") → fillers are removed.
+30. Stop Ollama, dictate with a cleanup model set → raw text is pasted and one "Cleanup skipped" notification appears (not one per dictation). Open Settings with Ollama stopped → hint "Ollama is not running…" and the saved model is still shown.
