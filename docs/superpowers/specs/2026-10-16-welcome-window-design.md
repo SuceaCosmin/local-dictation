@@ -23,7 +23,7 @@ Assumptions (confirmed in discussion): audience is people who install the Setup.
 - Changing the shortcut in the window saves it through the same path as Settings (`store.update` then `apply_runtime`), so the hook rebinds immediately. A validation failure shows the message inline in the window and keeps the old shortcut.
 
 ## Model status
-- Driven by the existing `Bridge.model_status` signal ("loading", "ready", "error: …"). `app.py` keeps the latest status string in a small holder so a window opened later renders the correct state immediately.
+- Driven by the existing `Bridge.model_status` signal ("loading", "ready", "error: …"). `TrayIcon.model_status` keeps the latest status string (the tray already receives the signal on the UI thread), and `app.py` passes it to the window when opening, so a window opened later renders the correct state immediately.
 - The bundled `base.en` loads in seconds, so an indeterminate bar is honest. No percentage is shown for on-demand model downloads (no progress hook exists today).
 - Tray icon and tooltip are unchanged; the window complements them.
 
@@ -32,7 +32,7 @@ Assumptions (confirmed in discussion): audience is people who install the Setup.
 - `shortcut.py` (pure): `keycaps(text) -> list[str]`, for example `"ctrl+win"` gives `["Ctrl", "Win"]`, `"ctrl+shift+space"` gives `["Ctrl", "Shift", "Space"]`. Unknown keys are title-cased; modifier order follows `MODIFIER_ORDER`.
 - `config.py`: add `welcome_shown`. `from_dict` already ignores missing keys and type-mismatched values.
 - `ui/tray.py`: new `welcome_requested` signal and menu action.
-- `app.py`: create/raise the window, first-run check, status holder, wiring. The window takes the listener and config as constructor arguments like `SettingsDialog`, and emits a `shortcut_changed(str)` signal; `app.py` does the saving.
+- `app.py`: create/raise the window, first-run check, `apply_shortcut_change` helper (validate, save, apply; returns errors), wiring. The window takes the listener and config as constructor arguments like `SettingsDialog`, and emits a `shortcut_changed(str)` signal; `app.py` does the saving.
 - The keyboard hook callback is untouched. No new threads.
 
 ## Testing

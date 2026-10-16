@@ -25,3 +25,10 @@ On a machine or user account without Python:
 18. Run the installer again while the app is running → it asks to close the app, then upgrades in place; settings are kept.
 19. Uninstall (Settings → Apps): the app is closed first; install folder and the Run value are gone; the prompt about settings and logs works for both Yes (folder deleted) and No (folder kept).
 20. Automated variant of 15/19 (use a dummy `%APPDATA%\LocalDictation`, never real settings): `Setup.exe /VERYSILENT /CURRENTUSER /DIR=...` then `unins000.exe /VERYSILENT /SUPPRESSMSGBOXES`; without `/SUPPRESSMSGBOXES` the "delete settings?" dialog still appears and waits.
+
+## Welcome window (run after any change to `ui/welcome.py`, `ui/tray.py` or the first-run block in `app.py`)
+21. First run: start with no config file (point `APPDATA` at an empty folder) → the welcome window appears with the right keycaps; the progress bar becomes "Ready. Try it now.". Start again → it does not reappear.
+22. Tray → How to use… reopens it (no second window if already open). Change the shortcut there and dictate with the new one; try an invalid one (a single letter) → message shown, old shortcut still works.
+23. Close the window while "Press the keys…" is showing → afterwards normal typing still works (capture was cancelled).
+24. Windows light and dark app mode: the window is readable in both.
+25. Open the window with a broken model name in config → red error text, no progress bar.

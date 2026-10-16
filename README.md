@@ -14,7 +14,7 @@ What to expect, because the installer is not code-signed:
 - Turn on **Start with Windows** in the app's Settings; the installer does not do it.
 - Uninstall from Windows Settings → Apps; it asks whether to delete your settings and logs.
 
-A tray icon shows the state; right-click it for **Settings…**, **Restart hotkey** and **Quit**.
+A tray icon shows the state; right-click it for **How to use…**, **Settings…**, **Restart hotkey** and **Quit**. A welcome window opens on first launch.
 
 ## Run from source
 
