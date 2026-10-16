@@ -2,6 +2,13 @@
 
 Status as of v0.3.0 (welcome window, select-only Settings, working Ollama cleanup; v0.2.0 shipped the installer, v0.1.0 was run-from-source with Poetry).
 
+## In progress: Ollama discovery and guided setup (resume here)
+Status (2026-10-16): design and plan are written and committed on `feature/ollama-setup`; **no code has been written yet**. Both documents were drafted for review and the owner has not explicitly approved them yet.
+- Spec: `docs/superpowers/specs/2026-10-16-ollama-discovery-and-setup-design.md`; plan (11 tasks, test-first): `docs/superpowers/plans/2026-10-16-ollama-discovery-and-setup.md`.
+- Why: cleanup is hardcoded to `localhost:11434`. The feature finds Ollama on any local port and offers install, start and model pull (with Retry and manual routes) in Settings and in the welcome window.
+- **Next steps:** (1) owner reviews the spec and plan and confirms or changes the "calls I made" list at the end of the spec; (2) choose the execution method, subagent-driven (recommended) or native; (3) start at Task 1 of the plan.
+- Open item for Task 6: confirm the real Ollama installer's signer name, silent-install switch and download sizes before relying on them.
+
 ## Done: v0.3.0 UX update (UX review, part 1)
 Spec: `docs/superpowers/specs/2026-10-16-welcome-window-design.md`; plan: `docs/superpowers/plans/2026-10-16-welcome-window.md`. Opens on first launch and from tray > How to use…; shows the keycaps, lets the user change the shortcut, shows model status and has a practice box to try dictation.
 - **Settings are select-only** (Whisper model, device, language, cleanup model); the cleanup model is picked from the models installed in Ollama.
