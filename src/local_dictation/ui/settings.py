@@ -7,12 +7,19 @@ from PySide6.QtCore import QTimer, Signal
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFormLayout,
                                QHBoxLayout, QLabel, QLineEdit, QPushButton, QWidget)
 
+from ..cleanup import list_models as list_installed_models
 from ..config import Config
 from ..shortcut import Shortcut
 
 CAPTURE_TIMEOUT_MS = 10_000
 WHISPER_MODELS = ["tiny.en", "base.en", "small.en", "medium.en",
                   "tiny", "base", "small", "medium", "large-v3"]
+# (label, Whisper language code); "" lets Whisper detect the language
+LANGUAGES = [("Auto-detect", ""), ("English", "en"), ("Romanian", "ro"), ("German", "de"),
+             ("French", "fr"), ("Spanish", "es"), ("Italian", "it"), ("Portuguese", "pt"),
+             ("Dutch", "nl"), ("Polish", "pl"), ("Russian", "ru"), ("Ukrainian", "uk"),
+             ("Turkish", "tr"), ("Japanese", "ja"), ("Chinese", "zh"), ("Korean", "ko"),
+             ("Arabic", "ar"), ("Hindi", "hi")]
 
 
 class ShortcutEdit(QWidget):
@@ -83,7 +90,7 @@ class ShortcutEdit(QWidget):
 
 
 class SettingsDialog(QDialog):
-    def __init__(self, config: Config, listener, parent=None):
+    def __init__(self, config: Config, listener, parent=None, *, list_models=None):
         super().__init__(parent)
         self._config = config
         self.setWindowTitle("Local Dictation — Settings")
@@ -96,16 +103,24 @@ class SettingsDialog(QDialog):
         self.stop_mode_combo.setCurrentIndex(self.stop_mode_combo.findData(config.stop_mode))
         self.paste_edit = ShortcutEdit(listener, config.paste_shortcut)
         self.model_combo = QComboBox()
-        self.model_combo.setEditable(True)
         self.model_combo.addItems(WHISPER_MODELS)
+        if config.model not in WHISPER_MODELS:  # hand-edited config: keep it selectable, not lost
+            self.model_combo.addItem(config.model)
         self.model_combo.setCurrentText(config.model)
         self.device_combo = QComboBox()
         self.device_combo.addItems(["cpu", "cuda"])
         self.device_combo.setCurrentText(config.device)
-        self.language_edit = QLineEdit(config.language)
-        self.language_edit.setPlaceholderText("auto-detect (e.g. en, ro, de)")
-        self.cleanup_edit = QLineEdit(config.cleanup_model)
-        self.cleanup_edit.setPlaceholderText("off (e.g. qwen2.5:1.5b via Ollama)")
+        self.language_combo = QComboBox()
+        for label, code in LANGUAGES:
+            self.language_combo.addItem(label, code)
+        if self.language_combo.findData(config.language) < 0:  # code outside the list: keep it
+            self.language_combo.addItem(config.language, config.language)
+        self.language_combo.setCurrentIndex(self.language_combo.findData(config.language))
+        self.cleanup_combo = QComboBox()
+        self.cleanup_hint = QLabel()
+        self.cleanup_hint.setWordWrap(True)
+        self.cleanup_hint.setStyleSheet("color: #6b7280;")
+        self._fill_cleanup(config.cleanup_model, (list_models or list_installed_models)())
         self.startup_check = QCheckBox("Start Local Dictation when I sign in to Windows")
         self.startup_check.setChecked(config.start_with_windows)
         self.error_label = QLabel()
@@ -118,8 +133,9 @@ class SettingsDialog(QDialog):
         form.addRow("Paste shortcut", self.paste_edit)
         form.addRow("Whisper model", self.model_combo)
         form.addRow("Device", self.device_combo)
-        form.addRow("Language", self.language_edit)
-        form.addRow("Cleanup model", self.cleanup_edit)
+        form.addRow("Language", self.language_combo)
+        form.addRow("Cleanup model", self.cleanup_combo)
+        form.addRow("", self.cleanup_hint)
         form.addRow("", self.startup_check)
         form.addRow(self.error_label)
         buttons = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
@@ -130,6 +146,22 @@ class SettingsDialog(QDialog):
 
         self.stop_mode_combo.currentIndexChanged.connect(self._sync_enabled)
         self._sync_enabled()
+
+    def _fill_cleanup(self, current: str, models) -> None:
+        """Off + the models Ollama has installed; the saved choice always stays selectable."""
+        self.cleanup_combo.addItem("Off", "")
+        installed = {m.name for m in models or []}
+        for m in models or []:
+            self.cleanup_combo.addItem(f"{m.name} · {m.size}", m.name)
+        if current and current not in installed:
+            self.cleanup_combo.addItem(f"{current} (not installed)", current)
+        self.cleanup_combo.setCurrentIndex(self.cleanup_combo.findData(current))
+        if models is None:
+            self.cleanup_hint.setText("Ollama is not running at localhost:11434. Start it, then "
+                                      "reopen Settings to choose a cleanup model.")
+        elif not models:
+            self.cleanup_hint.setText("Ollama has no models installed. Run: ollama pull <model>")
+        self.cleanup_hint.setVisible(bool(self.cleanup_hint.text()))
 
     def _sync_enabled(self) -> None:
         self.paste_edit.setEnabled(self.stop_mode_combo.currentData() == "combo")
@@ -142,8 +174,8 @@ class SettingsDialog(QDialog):
             paste_shortcut=self.paste_edit.value(),
             model=self.model_combo.currentText().strip(),
             device=self.device_combo.currentText(),
-            language=self.language_edit.text().strip(),
-            cleanup_model=self.cleanup_edit.text().strip(),
+            language=self.language_combo.currentData(),
+            cleanup_model=self.cleanup_combo.currentData(),
             start_with_windows=self.startup_check.isChecked(),
         )
 
